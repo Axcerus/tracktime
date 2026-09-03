@@ -20,7 +20,7 @@ export default function Header({
   return (
     <>
       {/* Top Header Bar: Slim on mobile, standard on desktop */}
-      <header className="sticky top-0 z-30 w-full bg-[#fbf9f5]/92 backdrop-blur-md border-b border-[#e5e0d8]/50 transition-colors">
+      <header className="sticky top-0 z-40 w-full bg-[#fbf9f5]/95 backdrop-blur-md border-b border-[#e5e0d8]/80 shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition-colors">
         <div className="max-w-[640px] w-full mx-auto px-4 sm:px-6 h-[50px] sm:h-[68px] flex items-center justify-between gap-2 sm:gap-3">
           {/* Brand Logomark */}
           <button
