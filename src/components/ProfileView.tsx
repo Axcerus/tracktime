@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useSyncExternalStore } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { ArrowLeft, Check, Plus, Edit2, Trash2 } from "lucide-react";
 import ManualEntryModal from "@/components/ManualEntryModal";
 import EditEntryModal from "@/components/EditEntryModal";
@@ -127,14 +127,12 @@ export default function ProfileView({
   // Session management modals state
   const [isManualModalOpen, setIsManualModalOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<RecentSession | null>(null);
-  const nowMs = useSyncExternalStore(
-    (callback) => {
-      const interval = setInterval(callback, 1000);
-      return () => clearInterval(interval);
-    },
-    () => Date.now(),
-    () => 0
-  );
+  const [nowMs, setNowMs] = useState(() => Date.now());
+
+  useEffect(() => {
+    const interval = setInterval(() => setNowMs(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Week navigation, month navigation, and session filtering state
   const [weekOffset, setWeekOffset] = useState<number>(0);

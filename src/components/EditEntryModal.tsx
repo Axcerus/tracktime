@@ -53,33 +53,6 @@ export default function EditEntryModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // If entry changed while open, adjust state during render
-  const [prevEntryId, setPrevEntryId] = useState(entry?.id);
-  if (entry && entry.id !== prevEntryId) {
-    setPrevEntryId(entry.id);
-    const startDate = new Date(entry.startTime);
-    const year = startDate.getFullYear();
-    const month = String(startDate.getMonth() + 1).padStart(2, "0");
-    const day = String(startDate.getDate()).padStart(2, "0");
-    setDate(`${year}-${month}-${day}`);
-
-    const startH = String(startDate.getHours()).padStart(2, "0");
-    const startM = String(startDate.getMinutes()).padStart(2, "0");
-    setStartTime(`${startH}:${startM}`);
-
-    if (entry.endTime) {
-      const endDate = new Date(entry.endTime);
-      const endH = String(endDate.getHours()).padStart(2, "0");
-      const endM = String(endDate.getMinutes()).padStart(2, "0");
-      setEndTime(`${endH}:${endM}`);
-    } else {
-      setEndTime("");
-    }
-
-    setDescription(entry.description || "");
-    setError("");
-  }
-
   if (!entry || !mounted) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {

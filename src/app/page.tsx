@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useSyncExternalStore } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Image from "next/image";
 import Header from "@/components/Header";
 import ReportsView from "@/components/ReportsView";
@@ -127,17 +127,17 @@ export default function AppSPA() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Ticker for running timer
-  const nowMs = useSyncExternalStore(
-    (callback) => {
-      if (!activeEntry) return () => {};
-      const id = setInterval(callback, 1000);
-      return () => clearInterval(id);
-    },
-    () => Date.now(),
-    () => 0
-  );
+  const [nowMs, setNowMs] = useState(() => Date.now());
 
-  const elapsedMs = activeEntry && nowMs > 0 ? Math.max(0, nowMs - activeEntry.startTime) : 0;
+  useEffect(() => {
+    if (!activeEntry) return;
+    const interval = setInterval(() => {
+      setNowMs(Date.now());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [activeEntry]);
+
+  const elapsedMs = activeEntry ? Math.max(0, nowMs - activeEntry.startTime) : 0;
 
   // Team members list
   const [teamMembers, setTeamMembers] = useState<TeamMemberItem[]>([]);
