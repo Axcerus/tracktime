@@ -3,11 +3,13 @@
 import { useEffect, useState, useCallback } from "react";
 import TeamBarChart from "@/components/TeamBarChart";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import UserAvatar from "@/components/UserAvatar";
 
 interface TeamMemberStat {
   id: string;
   name: string;
   email: string;
+  avatarUrl?: string | null;
   totalDurationMs: number;
   sessionCount: number;
   isWorkingNow: boolean;
@@ -217,14 +219,14 @@ export default function ReportsView({ onOpenMemberProfile }: ReportsViewProps) {
                   >
                     <td className="py-3 sm:py-3.5 px-3.5 sm:px-6">
                       <div className="flex items-center space-x-2.5 sm:space-x-3">
-                        <div className="relative shrink-0">
-                          <div className="w-8 h-8 rounded-full bg-[#ede8df] text-[#26201b] flex items-center justify-center text-[12px] font-bold">
-                            {member.name.charAt(0).toUpperCase()}
-                          </div>
-                          {offset === 0 && member.isWorkingNow && (
-                            <span className="online-dot absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 ring-2 ring-[#fbf9f5]" />
-                          )}
-                        </div>
+                        <UserAvatar
+                          name={member.name}
+                          avatarUrl={member.avatarUrl}
+                          size="sm"
+                          className="!w-8 !h-8"
+                          showOnlineDot={offset === 0}
+                          isOnline={member.isWorkingNow}
+                        />
 
                         <div className="min-w-0">
                           <div className="font-semibold text-[#26201b] flex items-center space-x-1.5 leading-tight">

@@ -2,9 +2,11 @@
 
 import Image from "next/image";
 import { Clock, BarChart2, User } from "lucide-react";
+import UserAvatar from "@/components/UserAvatar";
 
 interface HeaderProps {
   userName?: string | null;
+  avatarUrl?: string | null;
   activeTab?: "timer" | "reports" | "profile";
   onTabChange?: (tab: "timer" | "reports" | "profile") => void;
   isWorking?: boolean;
@@ -12,12 +14,11 @@ interface HeaderProps {
 
 export default function Header({
   userName,
+  avatarUrl,
   activeTab = "timer",
   onTabChange,
   isWorking = false,
 }: HeaderProps) {
-  const userInitial = userName ? userName.charAt(0).toUpperCase() : "U";
-
   return (
     <>
       {/* Top Header Bar: Slim on mobile, standard on desktop */}
@@ -99,9 +100,12 @@ export default function Header({
                 }`}
                 title="View your profile"
               >
-                <div className="w-5.5 h-5.5 rounded-full bg-[#26201b] text-white flex items-center justify-center text-[10.5px] font-bold shrink-0">
-                  {userInitial}
-                </div>
+                <UserAvatar
+                  name={userName}
+                  avatarUrl={avatarUrl}
+                  size="xs"
+                  className="!w-5.5 !h-5.5"
+                />
                 <span className="truncate max-w-30">{userName}</span>
               </button>
             </div>
@@ -151,7 +155,16 @@ export default function Header({
               title="View your profile"
             >
               <div className="relative shrink-0 flex items-center justify-center">
-                <User className="w-3.5 h-3.5 shrink-0" />
+                {avatarUrl ? (
+                  <UserAvatar
+                    name={userName}
+                    avatarUrl={avatarUrl}
+                    size="xs"
+                    className="!w-4 !h-4"
+                  />
+                ) : (
+                  <User className="w-3.5 h-3.5 shrink-0" />
+                )}
                 {isWorking && (
                   <span className="online-dot absolute -top-0.5 -right-0.5 w-1.5 h-1.5 ring-1 ring-white" />
                 )}

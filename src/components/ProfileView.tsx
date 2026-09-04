@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { ArrowLeft, Check, Plus, Edit2, Trash2 } from "lucide-react";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { ArrowLeft, Check, Plus, Edit2, Trash2, Camera, Upload, Loader2 } from "lucide-react";
 import ManualEntryModal from "@/components/ManualEntryModal";
 import EditEntryModal from "@/components/EditEntryModal";
 import DailyBarChart, { DailyStat } from "@/components/DailyBarChart";
 import MonthlyStreakCalendar, { MemberCalendar } from "@/components/MonthlyStreakCalendar";
+import UserAvatar from "@/components/UserAvatar";
 
 interface MemberStats {
   totalAllTimeMs: number;
@@ -28,6 +29,7 @@ interface MemberDetail {
   id: string;
   name: string;
   email: string;
+  avatarUrl?: string | null;
   createdAt: number;
   isWorkingNow: boolean;
   isMe: boolean;
@@ -49,7 +51,7 @@ interface MemberDetail {
 interface ProfileViewProps {
   memberId: string;
   onBack: () => void;
-  onUserUpdated?: (name: string) => void;
+  onUserUpdated?: (name: string, avatarUrl?: string | null) => void;
   onSignOut?: () => void;
 }
 
@@ -123,6 +125,82 @@ export default function ProfileView({
   const [editError, setEditError] = useState("");
   const [editSuccess, setEditSuccess] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+
+  // Avatar upload state
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [avatarError, setAvatarError] = useState("");
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setAvatarError("Please select a valid image file (PNG, JPG, WebP, GIF).");
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      setAvatarError("File size exceeds the 10MB limit.");
+      return;
+    }
+
+    setAvatarError("");
+    setIsUploadingAvatar(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/avatar/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to upload avatar");
+      }
+
+      setMember((prev) => (prev ? { ...prev, avatarUrl: data.avatarUrl } : null));
+      if (onUserUpdated && member) {
+        onUserUpdated(member.name, data.avatarUrl);
+      }
+    } catch (err) {
+      setAvatarError(err instanceof Error ? err.message : "Failed to upload avatar");
+    } finally {
+      setIsUploadingAvatar(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    if (!confirm("Are you sure you want to remove your profile picture?")) return;
+    setAvatarError("");
+    setIsUploadingAvatar(true);
+
+    try {
+      const res = await fetch("/api/avatar/upload", {
+        method: "DELETE",
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to remove avatar");
+      }
+
+      setMember((prev) => (prev ? { ...prev, avatarUrl: null } : null));
+      if (onUserUpdated && member) {
+        onUserUpdated(member.name, null);
+      }
+    } catch (err) {
+      setAvatarError(err instanceof Error ? err.message : "Failed to remove avatar");
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
 
   // Session management modals state
   const [isManualModalOpen, setIsManualModalOpen] = useState(false);
@@ -266,8 +344,6 @@ export default function ProfileView({
     );
   }
 
-  const initial = member.name.charAt(0).toUpperCase();
-
   const filteredEntries = (member.recentEntries || []).filter((session) => {
     if (selectedCalendarDate) {
       const tzOffset = new Date().getTimezoneOffset();
@@ -343,15 +419,40 @@ export default function ProfileView({
         )}
       </div>
 
+      {/* Hidden File Input for Avatar */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/gif"
+        onChange={handleAvatarUpload}
+        className="hidden"
+      />
+
       {/* Main Profile Info Card */}
       <div className="w-full bg-[#fbf9f5] border-[1.5px] border-[#e5e0d8] rounded-[18px] sm:rounded-[20px] px-4 sm:px-5 py-3.5 sm:py-4 flex items-center justify-between gap-3">
         <div className="flex items-center space-x-3.5">
-          <div className="relative shrink-0">
-            <div className="w-11 h-11 rounded-full bg-[#ede8df] flex items-center justify-center text-[18px] font-bold text-[#26201b]">
-              {initial}
-            </div>
-            {member.isWorkingNow && (
-              <span className="online-dot absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 ring-2 ring-[#fbf9f5]" />
+          <div className="relative group shrink-0">
+            <UserAvatar
+              name={member.name}
+              avatarUrl={member.avatarUrl}
+              size="lg"
+              showOnlineDot
+              isOnline={member.isWorkingNow}
+            />
+            {member.isMe && (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploadingAvatar}
+                title="Change profile picture"
+                className="absolute inset-0 rounded-full bg-black/45 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity cursor-pointer"
+              >
+                {isUploadingAvatar ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Camera className="w-4 h-4 drop-shadow-sm" />
+                )}
+              </button>
             )}
           </div>
           <div>
@@ -385,10 +486,16 @@ export default function ProfileView({
 
       {/* Edit Form (if toggled on for own profile) */}
       {isEditing && (
-        <div className="w-full bg-[#fbf9f5] border-[1.5px] border-[#e5e0d8] rounded-3xl p-6 space-y-4">
+        <div className="w-full bg-[#fbf9f5] border-[1.5px] border-[#e5e0d8] rounded-3xl p-6 space-y-5">
           <h2 className="text-[14px] font-bold uppercase tracking-widest text-[#797167]">
             Edit Your Profile
           </h2>
+
+          {avatarError && (
+            <div className="p-3 bg-[#fdf2f2] border border-[#f0c2c2] text-[#b91c1c] text-xs font-medium rounded-xl">
+              {avatarError}
+            </div>
+          )}
 
           {editError && (
             <div className="p-3 bg-[#fdf2f2] border border-[#f0c2c2] text-[#b91c1c] text-xs font-medium rounded-xl">
@@ -402,6 +509,52 @@ export default function ProfileView({
               <span>{editSuccess}</span>
             </div>
           )}
+
+          {/* Profile Photo Section */}
+          <div className="p-4 bg-white/60 border border-[#e5e0d8] rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center space-x-3.5">
+              <UserAvatar
+                name={member.name}
+                avatarUrl={member.avatarUrl}
+                size="lg"
+              />
+              <div>
+                <p className="text-[13px] font-semibold text-[#26201b]">Profile Photo</p>
+                <p className="text-[11.5px] text-[#797167] mt-0.5">
+                  JPG, PNG, WebP up to 10MB.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploadingAvatar}
+                className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-[#26201b] hover:bg-[#3d342c] text-white text-[12px] font-semibold rounded-xl transition cursor-pointer disabled:opacity-50"
+              >
+                {isUploadingAvatar ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Upload className="w-3.5 h-3.5" />
+                )}
+                <span>{isUploadingAvatar ? "Uploading..." : "Upload photo"}</span>
+              </button>
+
+              {member.avatarUrl && (
+                <button
+                  type="button"
+                  onClick={handleRemoveAvatar}
+                  disabled={isUploadingAvatar}
+                  className="inline-flex items-center space-x-1 px-2.5 py-1.5 text-xs text-red-600 hover:text-red-700 hover:bg-red-50 border border-transparent hover:border-red-200 rounded-xl transition cursor-pointer disabled:opacity-50"
+                  title="Remove photo"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Remove</span>
+                </button>
+              )}
+            </div>
+          </div>
 
           <form onSubmit={handleUpdateProfile} className="space-y-3.5">
             <div>

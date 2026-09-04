@@ -5,6 +5,7 @@ import Image from "next/image";
 import Header from "@/components/Header";
 import ReportsView from "@/components/ReportsView";
 import ProfileView from "@/components/ProfileView";
+import UserAvatar from "@/components/UserAvatar";
 import { ChevronRight, ChevronDown, ChevronUp } from "lucide-react";
 
 interface ActiveEntry {
@@ -18,12 +19,14 @@ interface UserProfile {
   id: string;
   name: string;
   email: string;
+  avatarUrl?: string | null;
 }
 
 interface TeamMemberItem {
   id: string;
   name: string;
   email: string;
+  avatarUrl?: string | null;
   isWorkingNow: boolean;
   startTime: number | null;
   description: string | null;
@@ -483,6 +486,7 @@ export default function AppSPA() {
       {/* Universal SPA Header */}
       <Header
         userName={user.name}
+        avatarUrl={user.avatarUrl}
         activeTab={activeTab}
         onTabChange={(tab) => navigateToTab(tab)}
         isWorking={isWorking}
@@ -655,12 +659,13 @@ export default function AppSPA() {
                           title="View member profile"
                         >
                           <div className="flex items-center space-x-3 min-w-0">
-                            <div className="relative shrink-0">
-                              <div className="w-8.5 h-8.5 rounded-full bg-[#e1efe5] text-[#2f7543] border border-[#a3d9b4] flex items-center justify-center text-[13.5px] font-bold">
-                                {member.name.charAt(0).toUpperCase()}
-                              </div>
-                              <span className="online-dot absolute -bottom-0.5 -right-0.5 ring-2 ring-[#f4f9f6] w-2 h-2" />
-                            </div>
+                            <UserAvatar
+                              name={member.name}
+                              avatarUrl={member.avatarUrl}
+                              size="md"
+                              showOnlineDot
+                              isOnline
+                            />
 
                             <div className="min-w-0">
                               <div className="flex items-center space-x-1.5 leading-tight">
@@ -713,12 +718,13 @@ export default function AppSPA() {
                             .filter((m) => !m.isWorkingNow)
                             .slice(0, 4)
                             .map((m) => (
-                              <div
+                              <UserAvatar
                                 key={m.id}
-                                className="w-6 h-6 rounded-full bg-[#ede8df] border-2 border-[#fbf9f5] flex items-center justify-center text-[9.5px] font-bold text-[#544e46]"
-                              >
-                                {m.name.charAt(0).toUpperCase()}
-                              </div>
+                                name={m.name}
+                                avatarUrl={m.avatarUrl}
+                                size="xs"
+                                className="border-2 border-[#fbf9f5]"
+                              />
                             ))}
                         </div>
                         <span>
@@ -749,9 +755,11 @@ export default function AppSPA() {
                                 title="View member profile"
                               >
                                 <div className="flex items-center space-x-3 min-w-0">
-                                  <div className="w-7.5 h-7.5 rounded-full bg-[#ede8df] text-[#544e46] flex items-center justify-center text-[12.5px] font-bold shrink-0">
-                                    {member.name.charAt(0).toUpperCase()}
-                                  </div>
+                                  <UserAvatar
+                                    name={member.name}
+                                    avatarUrl={member.avatarUrl}
+                                    size="sm"
+                                  />
                                   <div className="min-w-0">
                                     <div className="flex items-center space-x-1.5 leading-tight">
                                       <span className="font-semibold text-[13px] text-[#26201b] group-hover:underline truncate">
@@ -806,8 +814,20 @@ export default function AppSPA() {
             onBack={() => {
               navigateToTab(previousTab);
             }}
-            onUserUpdated={(newName) => {
-              setUser((prev) => (prev ? { ...prev, name: newName } : prev));
+            onUserUpdated={(newName, newAvatarUrl) => {
+              setUser((prev) =>
+                prev
+                  ? {
+                      ...prev,
+                      name: newName,
+                      avatarUrl:
+                        newAvatarUrl !== undefined
+                          ? newAvatarUrl
+                          : prev.avatarUrl,
+                    }
+                  : prev
+              );
+              fetchTeamMembers();
             }}
             onSignOut={handleSignOut}
           />

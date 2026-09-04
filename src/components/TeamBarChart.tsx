@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import UserAvatar from "@/components/UserAvatar";
 
 interface TeamMemberStat {
   id: string;
   name: string;
   email: string;
+  avatarUrl?: string | null;
   totalDurationMs: number;
   sessionCount: number;
   isWorkingNow: boolean;
@@ -130,13 +132,15 @@ export default function TeamBarChart({
 
                 {/* Member Label below bar */}
                 <div className="mt-2.5 sm:mt-3 text-center flex flex-col items-center max-w-full">
-                  <div className="relative mb-1">
-                    <div className="w-6.5 h-6.5 sm:w-7 sm:h-7 rounded-full bg-[#ede8df] flex items-center justify-center text-[10.5px] sm:text-[11px] font-bold text-[#26201b]">
-                      {member.name.charAt(0).toUpperCase()}
-                    </div>
-                    {member.isWorkingNow && (
-                      <span className="online-dot absolute -bottom-0.5 -right-0.5 w-2 h-2" />
-                    )}
+                  <div className="mb-1">
+                    <UserAvatar
+                      name={member.name}
+                      avatarUrl={member.avatarUrl}
+                      size="xs"
+                      className="!w-6.5 !h-6.5 sm:!w-7 sm:!h-7"
+                      showOnlineDot
+                      isOnline={member.isWorkingNow}
+                    />
                   </div>
                   <span className="text-[11px] sm:text-[12px] font-medium text-[#26201b] truncate max-w-13 sm:max-w-16.25 group-hover:underline">
                     {member.name}
