@@ -40,8 +40,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# local sqlite database & cloudflare wrangler
+# local sqlite database & cloudflare wrangler / opennext
 *.db
 *.db-shm
 *.db-wal
 .wrangler/
+.open-next/
+.dev.vars
