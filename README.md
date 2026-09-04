@@ -157,7 +157,7 @@ pnpm dlx wrangler login
 #### 2. Create a Cloudflare D1 Database
 
 ```bash
-pnpm dlx wrangler d1 create tracktimer-db
+pnpm dlx wrangler d1 create tracktime-db
 ```
 
 Wrangler will output the configuration details, including a `database_id`.
