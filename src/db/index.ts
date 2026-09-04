@@ -1,13 +1,16 @@
+import type { D1Database } from "@cloudflare/workers-types";
 import * as schema from "./schema";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let localDbInstance: any = null;
 
-export async function getDb() {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function getDb(): Promise<any> {
   try {
     // Check if running inside Cloudflare runtime
     const { getCloudflareContext } = await import("@opennextjs/cloudflare");
     const ctx = await getCloudflareContext({ async: true });
-    const env = ctx?.env as { DB?: any } | undefined;
+    const env = ctx?.env as { DB?: D1Database } | undefined;
     if (env?.DB) {
       const { drizzle: drizzleD1 } = await import("drizzle-orm/d1");
       return drizzleD1(env.DB, { schema });

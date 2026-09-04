@@ -10,8 +10,9 @@ function bufferToHex(buffer: ArrayBuffer): string {
     .join("");
 }
 
-function hexToBuffer(hex: string): Uint8Array {
-  const bytes = new Uint8Array(hex.length / 2);
+function hexToBuffer(hex: string): Uint8Array<ArrayBuffer> {
+  const buffer = new ArrayBuffer(hex.length / 2);
+  const bytes = new Uint8Array(buffer);
   for (let i = 0; i < hex.length; i += 2) {
     bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16);
   }
@@ -32,7 +33,7 @@ export async function hashPassword(password: string): Promise<string> {
   const derivedKey = await crypto.subtle.deriveBits(
     {
       name: "PBKDF2",
-      salt: salt as any,
+      salt,
       iterations: ITERATIONS,
       hash: "SHA-256",
     },
@@ -64,7 +65,7 @@ export async function verifyPassword(password: string, storedHash: string): Prom
   const derivedKey = await crypto.subtle.deriveBits(
     {
       name: "PBKDF2",
-      salt: salt as any,
+      salt,
       iterations: ITERATIONS,
       hash: "SHA-256",
     },

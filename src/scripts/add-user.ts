@@ -77,8 +77,9 @@ async function main() {
       stdio: "pipe",
     });
     console.log(`✅ Successfully inserted into local Cloudflare D1!`);
-  } catch (err: any) {
-    console.warn(`⚠️ Notice executing on local D1:`, err.message);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.warn(`⚠️ Notice executing on local D1:`, message);
   }
 
   // Insert into local fallback SQLite database
@@ -95,11 +96,12 @@ async function main() {
     console.log(`   ID: ${userId}`);
     console.log(`   Name: ${name}`);
     console.log(`   Email: ${email}`);
-  } catch (err: any) {
-    if (err.message?.includes("UNIQUE constraint failed")) {
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (message.includes("UNIQUE constraint failed")) {
       console.warn(`⚠️ User with email ${email} already exists locally.`);
     } else {
-      console.warn(`⚠️ Local insert notice:`, err.message);
+      console.warn(`⚠️ Local insert notice:`, message);
     }
   }
 
@@ -115,8 +117,9 @@ async function main() {
         stdio: "inherit",
       });
       console.log("✅ Successfully executed on remote D1!");
-    } catch (e: any) {
-      console.error("❌ Failed to execute remote D1 command:", e.message);
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e);
+      console.error("❌ Failed to execute remote D1 command:", message);
     }
   }
 }

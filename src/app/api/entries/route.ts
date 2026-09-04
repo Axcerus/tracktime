@@ -84,8 +84,19 @@ export async function GET(req: NextRequest) {
       .where(and(...queryConditions))
       .orderBy(desc(timeEntries.startTime));
 
+    interface EntryRow {
+      id: string;
+      userId: string;
+      userName: string;
+      userEmail: string;
+      description: string | null;
+      startTime: number;
+      endTime: number | null;
+      createdAt: number;
+    }
+
     let totalDurationMs = 0;
-    const mappedEntries = results.map((entry: any) => {
+    const mappedEntries = (results as EntryRow[]).map((entry) => {
       const durationMs = entry.endTime ? Math.max(0, entry.endTime - entry.startTime) : 0;
       if (entry.endTime) {
         totalDurationMs += durationMs;

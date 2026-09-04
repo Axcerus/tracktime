@@ -54,11 +54,11 @@ export async function GET(
   const isWorkingNow = activeEntries.length > 0;
 
   // Fetch all completed entries for this member
-  const allEntries = await db
+  const allEntries = (await db
     .select()
     .from(timeEntries)
     .where(eq(timeEntries.userId, id))
-    .orderBy(desc(timeEntries.startTime));
+    .orderBy(desc(timeEntries.startTime))) as Array<typeof timeEntries.$inferSelect>;
 
   // Timezone calculations
   const tzOffsetParam = req.nextUrl.searchParams.get("tzOffset");
@@ -174,7 +174,7 @@ export async function GET(
   // Up to 100 recent entries for filtering
   const recentEntries = allEntries
     .slice(0, 100)
-    .map((e: any) => ({
+    .map((e) => ({
       id: e.id,
       description: e.description,
       startTime: e.startTime,
