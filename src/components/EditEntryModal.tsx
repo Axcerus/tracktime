@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { X, Trash2 } from "lucide-react";
 
@@ -17,27 +17,46 @@ interface EditEntryModalProps {
   onSuccess: () => void;
 }
 
+const emptySubscribe = () => () => {};
+
 export default function EditEntryModal({
   entry,
   onClose,
   onSuccess,
 }: EditEntryModalProps) {
-  const [mounted, setMounted] = useState(false);
-  const [date, setDate] = useState("");
-  const [startTime, setStartTime] = useState("");
-  const [endTime, setEndTime] = useState("");
-  const [description, setDescription] = useState("");
+  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
+
+  const [date, setDate] = useState(() => {
+    if (!entry) return "";
+    const startDate = new Date(entry.startTime);
+    const year = startDate.getFullYear();
+    const month = String(startDate.getMonth() + 1).padStart(2, "0");
+    const day = String(startDate.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  });
+  const [startTime, setStartTime] = useState(() => {
+    if (!entry) return "";
+    const startDate = new Date(entry.startTime);
+    const startH = String(startDate.getHours()).padStart(2, "0");
+    const startM = String(startDate.getMinutes()).padStart(2, "0");
+    return `${startH}:${startM}`;
+  });
+  const [endTime, setEndTime] = useState(() => {
+    if (!entry?.endTime) return "";
+    const endDate = new Date(entry.endTime);
+    const endH = String(endDate.getHours()).padStart(2, "0");
+    const endM = String(endDate.getMinutes()).padStart(2, "0");
+    return `${endH}:${endM}`;
+  });
+  const [description, setDescription] = useState(() => entry?.description || "");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!entry) return;
-
+  // If entry changed while open, adjust state during render
+  const [prevEntryId, setPrevEntryId] = useState(entry?.id);
+  if (entry && entry.id !== prevEntryId) {
+    setPrevEntryId(entry.id);
     const startDate = new Date(entry.startTime);
     const year = startDate.getFullYear();
     const month = String(startDate.getMonth() + 1).padStart(2, "0");
@@ -59,7 +78,7 @@ export default function EditEntryModal({
 
     setDescription(entry.description || "");
     setError("");
-  }, [entry]);
+  }
 
   if (!entry || !mounted) return null;
 
@@ -104,8 +123,8 @@ export default function EditEntryModal({
 
       onSuccess();
       onClose();
-    } catch (err: any) {
-      setError(err.message || "Failed to update entry");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to update entry");
     } finally {
       setIsSubmitting(false);
     }
@@ -127,8 +146,8 @@ export default function EditEntryModal({
 
       onSuccess();
       onClose();
-    } catch (err: any) {
-      setError(err.message || "Failed to delete entry");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to delete entry");
     } finally {
       setIsDeleting(false);
     }
@@ -141,7 +160,7 @@ export default function EditEntryModal({
       }}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 backdrop-blur-sm p-3.5 sm:p-4 overflow-y-auto"
     >
-      <div className="w-full max-w-md bg-[#fbf9f5] rounded-[20px] sm:rounded-[24px] border-[1.5px] border-[#e5e0d8] shadow-2xl p-4 sm:p-6 relative my-auto">
+      <div className="w-full max-w-md bg-[#fbf9f5] rounded-[20px] sm:rounded-3xl border-[1.5px] border-[#e5e0d8] shadow-2xl p-4 sm:p-6 relative my-auto">
         <div className="flex items-center justify-between pb-3.5 border-b border-[#e5e0d8]">
           <h2 className="text-[17px] font-bold text-[#26201b]">Edit Work Session</h2>
           <button
@@ -161,7 +180,7 @@ export default function EditEntryModal({
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           <div>
-            <label className="block text-[12px] font-bold uppercase tracking-[0.1em] text-[#797167] mb-1.5">
+            <label className="block text-[12px] font-bold uppercase tracking-widest text-[#797167] mb-1.5">
               Task Note
             </label>
             <input
@@ -169,12 +188,12 @@ export default function EditEntryModal({
               placeholder="What were you working on?"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full h-[42px] px-3.5 bg-transparent border-[1.5px] border-[#e5e0d8] rounded-xl text-[14px] text-[#26201b] focus:outline-none focus:border-[#26201b] transition-colors"
+              className="w-full h-10.5 px-3.5 bg-transparent border-[1.5px] border-[#e5e0d8] rounded-xl text-[14px] text-[#26201b] focus:outline-none focus:border-[#26201b] transition-colors"
             />
           </div>
 
           <div>
-            <label className="block text-[12px] font-bold uppercase tracking-[0.1em] text-[#797167] mb-1.5">
+            <label className="block text-[12px] font-bold uppercase tracking-widest text-[#797167] mb-1.5">
               Date
             </label>
             <input
@@ -182,13 +201,13 @@ export default function EditEntryModal({
               required
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="w-full h-[42px] px-3.5 bg-transparent border-[1.5px] border-[#e5e0d8] rounded-xl text-[14px] text-[#26201b] focus:outline-none focus:border-[#26201b] transition-colors"
+              className="w-full h-10.5 px-3.5 bg-transparent border-[1.5px] border-[#e5e0d8] rounded-xl text-[14px] text-[#26201b] focus:outline-none focus:border-[#26201b] transition-colors"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[12px] font-bold uppercase tracking-[0.1em] text-[#797167] mb-1.5">
+              <label className="block text-[12px] font-bold uppercase tracking-widest text-[#797167] mb-1.5">
                 Start Time
               </label>
               <input
@@ -196,11 +215,11 @@ export default function EditEntryModal({
                 required
                 value={startTime}
                 onChange={(e) => setStartTime(e.target.value)}
-                className="w-full h-[42px] px-3.5 bg-transparent border-[1.5px] border-[#e5e0d8] rounded-xl text-[14px] text-[#26201b] focus:outline-none focus:border-[#26201b] transition-colors"
+                className="w-full h-10.5 px-3.5 bg-transparent border-[1.5px] border-[#e5e0d8] rounded-xl text-[14px] text-[#26201b] focus:outline-none focus:border-[#26201b] transition-colors"
               />
             </div>
             <div>
-              <label className="block text-[12px] font-bold uppercase tracking-[0.1em] text-[#797167] mb-1.5">
+              <label className="block text-[12px] font-bold uppercase tracking-widest text-[#797167] mb-1.5">
                 End Time
               </label>
               <input
@@ -208,7 +227,7 @@ export default function EditEntryModal({
                 value={endTime}
                 placeholder="--:--"
                 onChange={(e) => setEndTime(e.target.value)}
-                className="w-full h-[42px] px-3.5 bg-transparent border-[1.5px] border-[#e5e0d8] rounded-xl text-[14px] text-[#26201b] focus:outline-none focus:border-[#26201b] transition-colors"
+                className="w-full h-10.5 px-3.5 bg-transparent border-[1.5px] border-[#e5e0d8] rounded-xl text-[14px] text-[#26201b] focus:outline-none focus:border-[#26201b] transition-colors"
               />
             </div>
           </div>

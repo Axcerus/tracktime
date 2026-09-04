@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useSyncExternalStore } from "react";
 import { ArrowLeft, Check, Plus, Edit2, Trash2 } from "lucide-react";
 import ManualEntryModal from "@/components/ManualEntryModal";
 import EditEntryModal from "@/components/EditEntryModal";
@@ -127,18 +127,20 @@ export default function ProfileView({
   // Session management modals state
   const [isManualModalOpen, setIsManualModalOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<RecentSession | null>(null);
-  const [nowMs, setNowMs] = useState(Date.now());
+  const nowMs = useSyncExternalStore(
+    (callback) => {
+      const interval = setInterval(callback, 1000);
+      return () => clearInterval(interval);
+    },
+    () => Date.now(),
+    () => 0
+  );
 
   // Week navigation, month navigation, and session filtering state
   const [weekOffset, setWeekOffset] = useState<number>(0);
   const [monthOffset, setMonthOffset] = useState<number>(0);
   const [sessionFilter, setSessionFilter] = useState<"all" | "today" | "week" | "month">("today");
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<string | null>(null);
-
-  useEffect(() => {
-    const interval = setInterval(() => setNowMs(Date.now()), 1000);
-    return () => clearInterval(interval);
-  }, []);
 
   const fetchMember = useCallback(async () => {
     const tzOffset = new Date().getTimezoneOffset();
@@ -159,7 +161,16 @@ export default function ProfileView({
   }, [memberId, weekOffset, monthOffset]);
 
   useEffect(() => {
-    fetchMember();
+    let ignore = false;
+    async function load() {
+      if (!ignore) {
+        await fetchMember();
+      }
+    }
+    load();
+    return () => {
+      ignore = true;
+    };
   }, [fetchMember]);
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
@@ -195,8 +206,8 @@ export default function ProfileView({
         setIsEditing(false);
         setEditSuccess("");
       }, 1500);
-    } catch (err: any) {
-      setEditError(err.message || "Failed to update");
+    } catch (err: unknown) {
+      setEditError(err instanceof Error ? err.message : "Failed to update");
     } finally {
       setIsSaving(false);
     }
@@ -228,17 +239,17 @@ export default function ProfileView({
         </div>
 
         {/* Profile Card Skeleton */}
-        <div className="w-full h-[104px] bg-[#ede8df]/50 border-[1.5px] border-[#e5e0d8] rounded-[24px]" />
+        <div className="w-full h-26 bg-[#ede8df]/50 border-[1.5px] border-[#e5e0d8] rounded-3xl" />
 
         {/* 4 Cards Skeleton */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-[92px] bg-[#ede8df]/40 border-[1.5px] border-[#e5e0d8] rounded-[20px]" />
+            <div key={i} className="h-23 bg-[#ede8df]/40 border-[1.5px] border-[#e5e0d8] rounded-[20px]" />
           ))}
         </div>
 
         {/* Chart Skeleton */}
-        <div className="w-full h-[260px] bg-[#ede8df]/30 border-[1.5px] border-[#e5e0d8] rounded-[24px]" />
+        <div className="w-full h-65 bg-[#ede8df]/30 border-[1.5px] border-[#e5e0d8] rounded-3xl" />
       </div>
     );
   }
@@ -376,8 +387,8 @@ export default function ProfileView({
 
       {/* Edit Form (if toggled on for own profile) */}
       {isEditing && (
-        <div className="w-full bg-[#fbf9f5] border-[1.5px] border-[#e5e0d8] rounded-[24px] p-6 space-y-4">
-          <h2 className="text-[14px] font-bold uppercase tracking-[0.1em] text-[#797167]">
+        <div className="w-full bg-[#fbf9f5] border-[1.5px] border-[#e5e0d8] rounded-3xl p-6 space-y-4">
+          <h2 className="text-[14px] font-bold uppercase tracking-widest text-[#797167]">
             Edit Your Profile
           </h2>
 
@@ -404,7 +415,7 @@ export default function ProfileView({
                 required
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
-                className="w-full h-[40px] px-3.5 bg-transparent border border-[#e5e0d8] rounded-xl text-[14px] text-[#26201b] focus:outline-none focus:border-[#26201b]"
+                className="w-full h-10 px-3.5 bg-transparent border border-[#e5e0d8] rounded-xl text-[14px] text-[#26201b] focus:outline-none focus:border-[#26201b]"
               />
             </div>
 
@@ -424,7 +435,7 @@ export default function ProfileView({
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   placeholder="Leave empty if not changing"
-                  className="w-full h-[40px] px-3 bg-transparent border border-[#e5e0d8] rounded-xl text-[13px] text-[#26201b] focus:outline-none focus:border-[#26201b]"
+                  className="w-full h-10 px-3 bg-transparent border border-[#e5e0d8] rounded-xl text-[13px] text-[#26201b] focus:outline-none focus:border-[#26201b]"
                 />
               </div>
               <div>
@@ -436,7 +447,7 @@ export default function ProfileView({
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="Min 6 characters"
-                  className="w-full h-[40px] px-3 bg-transparent border border-[#e5e0d8] rounded-xl text-[13px] text-[#26201b] focus:outline-none focus:border-[#26201b]"
+                  className="w-full h-10 px-3 bg-transparent border border-[#e5e0d8] rounded-xl text-[13px] text-[#26201b] focus:outline-none focus:border-[#26201b]"
                 />
               </div>
             </div>
@@ -470,18 +481,18 @@ export default function ProfileView({
           )}
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
-          {[
+          {([
             { id: "today", label: "Today", value: member.stats.totalTodayMs },
             { id: "week", label: "This Week", value: member.stats.totalWeekMs },
             { id: "month", label: "This Month", value: member.stats.totalMonthMs },
             { id: "all", label: "All Time", value: member.stats.totalAllTimeMs },
-          ].map((card) => {
+          ] as const).map((card) => {
             const isSelected = sessionFilter === card.id;
             return (
               <button
                 key={card.id}
                 onClick={() => {
-                  setSessionFilter(card.id as any);
+                  setSessionFilter(card.id);
                   setSelectedCalendarDate(null);
                 }}
                 title={`Filter sessions by ${card.label}`}
@@ -492,7 +503,7 @@ export default function ProfileView({
                 }`}
               >
                 <div
-                  className={`text-[10.5px] sm:text-[11px] font-bold uppercase tracking-[0.1em] mb-1 ${
+                  className={`text-[10.5px] sm:text-[11px] font-bold uppercase tracking-widest mb-1 ${
                     isSelected && !selectedCalendarDate ? "text-white/75" : "text-[#797167]"
                   }`}
                 >
@@ -565,7 +576,7 @@ export default function ProfileView({
                   return (
                     <div
                       key={session.id}
-                      className={`group border-[1.5px] rounded-[16px] sm:rounded-[18px] px-3.5 sm:px-5 py-3 sm:py-3.5 flex items-center justify-between gap-2.5 sm:gap-4 transition-colors ${
+                      className={`group border-[1.5px] rounded-2xl sm:rounded-[18px] px-3.5 sm:px-5 py-3 sm:py-3.5 flex items-center justify-between gap-2.5 sm:gap-4 transition-colors ${
                         isRunning
                           ? "bg-[#e8f2eb]/60 border-[#6ab382] hover:bg-[#e8f2eb]/80"
                           : "bg-[#fbf9f5] hover:bg-[#f6f2ea] border-[#e5e0d8]"
@@ -637,6 +648,7 @@ export default function ProfileView({
       />
 
       <EditEntryModal
+        key={editingEntry?.id}
         entry={editingEntry}
         onClose={() => setEditingEntry(null)}
         onSuccess={fetchMember}

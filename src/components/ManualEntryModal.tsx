@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
+
+const emptySubscribe = () => () => {};
 
 interface ManualEntryModalProps {
   isOpen: boolean;
@@ -15,11 +17,7 @@ export default function ManualEntryModal({
   onClose,
   onSuccess,
 }: ManualEntryModalProps) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
 
   const getTodayDateStr = () => {
     const d = new Date();
@@ -78,8 +76,8 @@ export default function ManualEntryModal({
 
       onSuccess();
       onClose();
-    } catch (err: any) {
-      setError(err.message || "Failed to log entry");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to log entry");
     } finally {
       setIsSubmitting(false);
     }
@@ -92,7 +90,7 @@ export default function ManualEntryModal({
       }}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 backdrop-blur-sm p-3.5 sm:p-4 overflow-y-auto"
     >
-      <div className="w-full max-w-md bg-[#fbf9f5] rounded-[20px] sm:rounded-[24px] border-[1.5px] border-[#e5e0d8] shadow-2xl p-4 sm:p-6 relative my-auto">
+      <div className="w-full max-w-md bg-[#fbf9f5] rounded-[20px] sm:rounded-3xl border-[1.5px] border-[#e5e0d8] shadow-2xl p-4 sm:p-6 relative my-auto">
         <div className="flex items-center justify-between pb-3.5 border-b border-[#e5e0d8]">
           <h2 className="text-[17px] font-bold text-[#26201b]">Log Missed Work Session</h2>
           <button
@@ -112,7 +110,7 @@ export default function ManualEntryModal({
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           <div>
-            <label className="block text-[12px] font-bold uppercase tracking-[0.1em] text-[#797167] mb-1.5">
+            <label className="block text-[12px] font-bold uppercase tracking-widest text-[#797167] mb-1.5">
               What were you working on?
             </label>
             <input
@@ -120,12 +118,12 @@ export default function ManualEntryModal({
               placeholder="e.g. Design review, client call"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full h-[42px] px-3.5 bg-transparent border-[1.5px] border-[#e5e0d8] rounded-xl text-[14px] text-[#26201b] focus:outline-none focus:border-[#26201b] transition-colors"
+              className="w-full h-10.5 px-3.5 bg-transparent border-[1.5px] border-[#e5e0d8] rounded-xl text-[14px] text-[#26201b] focus:outline-none focus:border-[#26201b] transition-colors"
             />
           </div>
 
           <div>
-            <label className="block text-[12px] font-bold uppercase tracking-[0.1em] text-[#797167] mb-1.5">
+            <label className="block text-[12px] font-bold uppercase tracking-widest text-[#797167] mb-1.5">
               Date
             </label>
             <input
@@ -133,13 +131,13 @@ export default function ManualEntryModal({
               required
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="w-full h-[42px] px-3.5 bg-transparent border-[1.5px] border-[#e5e0d8] rounded-xl text-[14px] text-[#26201b] focus:outline-none focus:border-[#26201b] transition-colors"
+              className="w-full h-10.5 px-3.5 bg-transparent border-[1.5px] border-[#e5e0d8] rounded-xl text-[14px] text-[#26201b] focus:outline-none focus:border-[#26201b] transition-colors"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[12px] font-bold uppercase tracking-[0.1em] text-[#797167] mb-1.5">
+              <label className="block text-[12px] font-bold uppercase tracking-widest text-[#797167] mb-1.5">
                 Start Time
               </label>
               <input
@@ -147,11 +145,11 @@ export default function ManualEntryModal({
                 required
                 value={startTime}
                 onChange={(e) => setStartTime(e.target.value)}
-                className="w-full h-[42px] px-3.5 bg-transparent border-[1.5px] border-[#e5e0d8] rounded-xl text-[14px] text-[#26201b] focus:outline-none focus:border-[#26201b] transition-colors"
+                className="w-full h-10.5 px-3.5 bg-transparent border-[1.5px] border-[#e5e0d8] rounded-xl text-[14px] text-[#26201b] focus:outline-none focus:border-[#26201b] transition-colors"
               />
             </div>
             <div>
-              <label className="block text-[12px] font-bold uppercase tracking-[0.1em] text-[#797167] mb-1.5">
+              <label className="block text-[12px] font-bold uppercase tracking-widest text-[#797167] mb-1.5">
                 End Time
               </label>
               <input
@@ -159,7 +157,7 @@ export default function ManualEntryModal({
                 required
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
-                className="w-full h-[42px] px-3.5 bg-transparent border-[1.5px] border-[#e5e0d8] rounded-xl text-[14px] text-[#26201b] focus:outline-none focus:border-[#26201b] transition-colors"
+                className="w-full h-10.5 px-3.5 bg-transparent border-[1.5px] border-[#e5e0d8] rounded-xl text-[14px] text-[#26201b] focus:outline-none focus:border-[#26201b] transition-colors"
               />
             </div>
           </div>

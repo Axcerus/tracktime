@@ -61,7 +61,16 @@ export default function ReportsView({ onOpenMemberProfile }: ReportsViewProps) {
   }, [period, offset]);
 
   useEffect(() => {
-    fetchTeamData();
+    let ignore = false;
+    async function load() {
+      if (!ignore) {
+        await fetchTeamData();
+      }
+    }
+    load();
+    return () => {
+      ignore = true;
+    };
   }, [fetchTeamData]);
 
   const handlePeriodChange = (newPeriod: Period) => {
@@ -119,7 +128,7 @@ export default function ReportsView({ onOpenMemberProfile }: ReportsViewProps) {
           </button>
 
           <span
-            className="w-[100px] sm:w-[108px] text-[12px] sm:text-[13px] font-semibold text-[#26201b] text-center select-none truncate px-1"
+            className="w-25 sm:w-27 text-[12px] sm:text-[13px] font-semibold text-[#26201b] text-center select-none truncate px-1"
             title={dateLabel}
           >
             {dateLabel || (isLoading ? "..." : "Today")}
@@ -137,7 +146,7 @@ export default function ReportsView({ onOpenMemberProfile }: ReportsViewProps) {
       </div>
 
       {/* Team Summary Metric Card */}
-      <div className="w-full bg-[#fbf9f5] border-[1.5px] border-[#e5e0d8] rounded-[20px] sm:rounded-[24px] p-5 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="w-full bg-[#fbf9f5] border-[1.5px] border-[#e5e0d8] rounded-[20px] sm:rounded-3xl p-5 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="text-[11px] sm:text-[11.5px] font-bold uppercase tracking-[0.14em] text-[#797167] mb-1.5 sm:mb-2">
             {displayHeaderLabel} · TEAM TOTAL
@@ -168,10 +177,10 @@ export default function ReportsView({ onOpenMemberProfile }: ReportsViewProps) {
       />
 
       {/* Team Comparison Table */}
-      <div className="border-[1.5px] border-[#e5e0d8] rounded-[20px] sm:rounded-[24px] overflow-hidden bg-[#fbf9f5]">
+      <div className="border-[1.5px] border-[#e5e0d8] rounded-[20px] sm:rounded-3xl overflow-hidden bg-[#fbf9f5]">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="border-b border-[#e5e0d8] bg-[#f6f2ea]/60 text-[11.5px] sm:text-[12px] font-semibold uppercase tracking-[0.1em] text-[#797167]">
+            <tr className="border-b border-[#e5e0d8] bg-[#f6f2ea]/60 text-[11.5px] sm:text-[12px] font-semibold uppercase tracking-widest text-[#797167]">
               <th className="py-3 px-3.5 sm:px-6">Member</th>
               <th className="hidden sm:table-cell py-3 px-3.5 sm:px-6">Status</th>
               <th className="py-3 px-3.5 sm:px-6 text-right">Sessions</th>
