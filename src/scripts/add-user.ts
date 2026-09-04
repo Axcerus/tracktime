@@ -73,7 +73,7 @@ async function main() {
   // Insert into local Cloudflare D1
   const { execSync } = await import("child_process");
   try {
-    execSync(`npx wrangler d1 execute tracktimer-db --local --command "${sql}"`, {
+    execSync(`npx wrangler d1 execute tracktime-db --local --command "${sql}"`, {
       stdio: "pipe",
     });
     console.log(`✅ Successfully inserted into local Cloudflare D1!`);
@@ -107,13 +107,13 @@ async function main() {
 
   console.log("\n📦 For Cloudflare D1 (Production):");
   console.log("Run this command with Wrangler to insert into your remote Cloudflare D1:");
-  console.log(`\n  npx wrangler d1 execute tracktimer-db --remote --command "${sql}"\n`);
+  console.log(`\n  npx wrangler d1 execute tracktime-db --remote --command "${sql}"\n`);
 
   if (isProd) {
     console.log("Executing on Cloudflare D1 remote via wrangler...");
     const { execSync } = await import("child_process");
     try {
-      execSync(`npx wrangler d1 execute tracktimer-db --remote --command "${sql}"`, {
+      execSync(`npx wrangler d1 execute tracktime-db --remote --command "${sql}"`, {
         stdio: "inherit",
       });
       console.log("✅ Successfully executed on remote D1!");

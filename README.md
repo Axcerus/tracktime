@@ -164,7 +164,7 @@ Wrangler will output the configuration details, including a `database_id`.
 
 #### 3. Update `wrangler.jsonc`
 
-Open [`wrangler.jsonc`](file:///home/prantik/Projects/tracktime/wrangler.jsonc) and replace `"tracktimer-db-id"` with your actual D1 `database_id`:
+Open [`wrangler.jsonc`](file:///home/prantik/Projects/tracktime/wrangler.jsonc) and replace `"tracktime-db-id"` with your actual D1 `database_id`:
 
 ```jsonc
 {
@@ -182,7 +182,7 @@ Open [`wrangler.jsonc`](file:///home/prantik/Projects/tracktime/wrangler.jsonc) 
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "tracktimer-db",
+      "database_name": "tracktime-db",
       "database_id": "<YOUR_ACTUAL_D1_DATABASE_ID>"
     }
   ]
@@ -194,7 +194,7 @@ Open [`wrangler.jsonc`](file:///home/prantik/Projects/tracktime/wrangler.jsonc) 
 Apply the database schema to your remote D1 instance:
 
 ```bash
-pnpm dlx wrangler d1 execute tracktimer-db --remote --file=./drizzle/0000_concerned_ego.sql
+pnpm dlx wrangler d1 execute tracktime-db --remote --file=./drizzle/0000_concerned_ego.sql
 ```
 
 #### 5. Set the Session Secret
@@ -234,7 +234,7 @@ pnpm dlx wrangler deploy
 > - **Build command**: `pnpm dlx @opennextjs/cloudflare build` (or `pnpm build:worker`)
 > - **Root directory**: `/`
 > - **Compatibility flags**: `nodejs_compat`
-> - **D1 Database Binding**: Under Worker Settings > Bindings, ensure the `DB` variable is bound to your `tracktimer-db`.
+> - **D1 Database Binding**: Under Worker Settings > Bindings, ensure the `DB` variable is bound to your `tracktime-db`.
 >
 > *(Note: Ensure `open-next.config.ts` and `wrangler.jsonc` are committed and pushed to your repository branch).*
 
