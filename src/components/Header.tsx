@@ -104,7 +104,7 @@ export default function Header({
                   name={userName}
                   avatarUrl={avatarUrl}
                   size="xs"
-                  className="!w-5.5 !h-5.5"
+                  className="w-5.5! h-5.5!"
                 />
                 <span className="truncate max-w-30">{userName}</span>
               </button>
@@ -160,7 +160,7 @@ export default function Header({
                     name={userName}
                     avatarUrl={avatarUrl}
                     size="xs"
-                    className="!w-4 !h-4"
+                    className="w-4! h-4!"
                   />
                 ) : (
                   <User className="w-3.5 h-3.5 shrink-0" />

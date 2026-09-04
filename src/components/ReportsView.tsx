@@ -223,7 +223,7 @@ export default function ReportsView({ onOpenMemberProfile }: ReportsViewProps) {
                           name={member.name}
                           avatarUrl={member.avatarUrl}
                           size="sm"
-                          className="!w-8 !h-8"
+                          className="w-8! h-8!"
                           showOnlineDot={offset === 0}
                           isOnline={member.isWorkingNow}
                         />

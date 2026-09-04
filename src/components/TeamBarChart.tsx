@@ -137,7 +137,7 @@ export default function TeamBarChart({
                       name={member.name}
                       avatarUrl={member.avatarUrl}
                       size="xs"
-                      className="!w-6.5 !h-6.5 sm:!w-7 sm:!h-7"
+                      className="w-6.5! h-6.5! sm:w-7! sm:h-7!"
                       showOnlineDot
                       isOnline={member.isWorkingNow}
                     />
