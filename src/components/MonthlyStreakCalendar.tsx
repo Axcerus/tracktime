@@ -161,7 +161,7 @@ export default function MonthlyStreakCalendar({
         {Array.from({ length: calendar.leadingBlankDays }).map((_, idx) => (
           <div
             key={`blank-${idx}`}
-            className="min-h-[38px] xs:min-h-[42px] sm:min-h-[46px] rounded-lg sm:rounded-xl bg-transparent border border-transparent"
+            className="min-h-9.5 xs:min-h-[42px] sm:min-h-11.5 rounded-lg sm:rounded-xl bg-transparent border border-transparent"
           />
         ))}
 
@@ -179,13 +179,13 @@ export default function MonthlyStreakCalendar({
                 }
               }}
               disabled={day.isFuture}
-              className={`min-h-[38px] xs:min-h-[42px] sm:min-h-[46px] p-1 sm:p-2 rounded-lg sm:rounded-xl flex flex-col justify-between transition-all relative border text-left cursor-pointer ${
+              className={`min-h-9.5 xs:min-h-[42px] sm:min-h-11.5 p-1 sm:p-2 rounded-lg sm:rounded-xl flex flex-col justify-between transition-all relative border text-left cursor-pointer ${
                 day.isFuture
                   ? "opacity-25 border-transparent bg-transparent cursor-default"
                   : isSelected
                   ? "ring-2 ring-[#26201b] border-transparent shadow-xs scale-[1.02]"
                   : day.targetMet
-                  ? "bg-gradient-to-b from-[#fffdf5] to-[#fef8e7] border-[#fde68a] hover:border-[#f59e0b] shadow-xs"
+                  ? "bg-linear-to-b from-[#fffdf5] to-[#fef8e7] border-[#fde68a] hover:border-[#f59e0b] shadow-xs"
                   : day.durationMs > 0
                   ? "bg-white/85 border-[#e5e0d8] hover:border-[#c5beb4]"
                   : "bg-[#fbf9f5]/40 border-dashed border-[#e5e0d8]/60 hover:border-[#d5cec4]"

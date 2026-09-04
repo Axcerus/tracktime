@@ -53,7 +53,7 @@ export default function DailyBarChart({
   const avgMs = activeDays > 0 ? Math.floor(totalWeeklyMs / activeDays) : 0;
 
   return (
-    <div className="w-full bg-[#fbf9f5] border-[1.5px] border-[#e5e0d8] rounded-[20px] sm:rounded-[24px] p-4 sm:p-7">
+    <div className="w-full bg-[#fbf9f5] border-[1.5px] border-[#e5e0d8] rounded-[20px] sm:rounded-3xl p-4 sm:p-7">
       {/* Chart Header with Optional Week Navigation Slider */}
       <div className="flex items-start sm:items-center justify-between gap-2 sm:gap-3 mb-4 sm:mb-6">
         <div className="min-w-0 pr-1">
@@ -74,7 +74,7 @@ export default function DailyBarChart({
             >
               <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
-            <span className="w-[84px] sm:w-[104px] text-[11.5px] sm:text-[13px] font-semibold text-[#26201b] text-center select-none truncate px-0.5">
+            <span className="w-21 sm:w-26 text-[11.5px] sm:text-[13px] font-semibold text-[#26201b] text-center select-none truncate px-0.5">
               {weekLabel}
             </span>
             <button
@@ -140,7 +140,7 @@ export default function DailyBarChart({
                 </div>
 
                 {/* Bar Pill */}
-                <div className="w-full max-w-[48px] h-full flex items-end justify-center">
+                <div className="w-full max-w-12 h-full flex items-end justify-center">
                   <div
                     style={{ height: `${barHeight}%` }}
                     className={`w-full rounded-t-xl transition-all duration-300 ${
@@ -154,7 +154,7 @@ export default function DailyBarChart({
                 </div>
 
                 {/* Day & Date Labels */}
-                <div className="mt-2.5 sm:mt-3 text-center flex flex-col items-center justify-start h-[34px] select-none">
+                <div className="mt-2.5 sm:mt-3 text-center flex flex-col items-center justify-start h-8.5 select-none">
                   <span
                     className={`text-[10.5px] sm:text-[12px] leading-tight block ${
                       stat.isToday

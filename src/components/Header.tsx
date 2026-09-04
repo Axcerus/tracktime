@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { Clock, BarChart2, User } from "lucide-react";
 
 interface HeaderProps {
@@ -21,17 +22,20 @@ export default function Header({
     <>
       {/* Top Header Bar: Slim on mobile, standard on desktop */}
       <header className="sticky top-0 z-40 w-full bg-[#fbf9f5]/95 backdrop-blur-md border-b border-[#e5e0d8]/80 shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition-colors">
-        <div className="max-w-[640px] w-full mx-auto px-4 sm:px-6 h-[50px] sm:h-[68px] flex items-center justify-between gap-2 sm:gap-3">
+        <div className="max-w-160 w-full mx-auto px-4 sm:px-6 h-12.5 sm:h-17 flex items-center justify-between gap-2 sm:gap-3">
           {/* Brand Logomark */}
           <button
             onClick={() => onTabChange && onTabChange("timer")}
             className="flex items-center gap-1.5 hover:opacity-85 active:scale-[0.98] transition-all cursor-pointer select-none group shrink-0"
             title="Track Home"
           >
-            <img
+            <Image
               src="/axcerus-logo.png"
               alt="Axcerus logo"
-              className="h-[20px] sm:h-[23px] w-auto object-contain shrink-0 transition-transform group-hover:scale-105"
+              width={23}
+              height={23}
+              unoptimized
+              className="h-5 sm:h-5.75 w-auto object-contain shrink-0 transition-transform group-hover:scale-105"
             />
             <span className="text-[16px] sm:text-[18px] font-bold tracking-[-0.03em] text-[#26201b] leading-none">
               Track
@@ -98,7 +102,7 @@ export default function Header({
                 <div className="w-5.5 h-5.5 rounded-full bg-[#26201b] text-white flex items-center justify-center text-[10.5px] font-bold shrink-0">
                   {userInitial}
                 </div>
-                <span className="truncate max-w-[120px]">{userName}</span>
+                <span className="truncate max-w-30">{userName}</span>
               </button>
             </div>
           )}

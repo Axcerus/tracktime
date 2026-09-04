@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useCallback, useSyncExternalStore } from "react";
+import Image from "next/image";
 import Header from "@/components/Header";
 import ReportsView from "@/components/ReportsView";
 import ProfileView from "@/components/ProfileView";
@@ -104,22 +105,44 @@ export default function AppSPA() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   // SPA Navigation Tab
-  const [activeTab, setActiveTab] = useState<"timer" | "reports" | "profile">("timer");
-  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"timer" | "reports" | "profile">(() => {
+    if (typeof window === "undefined") return "timer";
+    const path = window.location.pathname;
+    const searchParams = new URLSearchParams(window.location.search);
+    if (path === "/reports" || searchParams.get("tab") === "reports") return "reports";
+    if (path === "/profile" || searchParams.get("tab") === "profile" || searchParams.get("member")) return "profile";
+    return "timer";
+  });
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    const searchParams = new URLSearchParams(window.location.search);
+    return searchParams.get("member");
+  });
   const [previousTab, setPreviousTab] = useState<"timer" | "reports">("timer");
 
   // Timer state
   const [activeEntry, setActiveEntry] = useState<ActiveEntry | null>(null);
   const [todayTotalMs, setTodayTotalMs] = useState<number>(0);
   const [descriptionInput, setDescriptionInput] = useState("");
-  const [elapsedMs, setElapsedMs] = useState<number>(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Ticker for running timer
+  const nowMs = useSyncExternalStore(
+    (callback) => {
+      if (!activeEntry) return () => {};
+      const id = setInterval(callback, 1000);
+      return () => clearInterval(id);
+    },
+    () => Date.now(),
+    () => 0
+  );
+
+  const elapsedMs = activeEntry && nowMs > 0 ? Math.max(0, nowMs - activeEntry.startTime) : 0;
 
   // Team members list
   const [teamMembers, setTeamMembers] = useState<TeamMemberItem[]>([]);
   const [activeCount, setActiveCount] = useState<number>(0);
   const [showOffline, setShowOffline] = useState(false);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // SPA Browser URL Synchronization
   const syncFromLocation = useCallback(() => {
@@ -142,10 +165,9 @@ export default function AppSPA() {
       setActiveTab("timer");
       setSelectedMemberId(null);
     }
-  }, [user?.id]);
+  }, [user]);
 
   useEffect(() => {
-    syncFromLocation();
     window.addEventListener("popstate", syncFromLocation);
     return () => window.removeEventListener("popstate", syncFromLocation);
   }, [syncFromLocation]);
@@ -208,11 +230,6 @@ export default function AppSPA() {
         const data = await res.json();
         setActiveEntry(data.activeEntry);
         setTodayTotalMs(data.todayTotalMs || 0);
-        if (data.activeEntry) {
-          setElapsedMs(Date.now() - data.activeEntry.startTime);
-        } else {
-          setElapsedMs(0);
-        }
       }
     } catch (err) {
       console.error("Error fetching timer state:", err);
@@ -235,13 +252,27 @@ export default function AppSPA() {
   }, []);
 
   useEffect(() => {
-    checkAuth();
+    let ignore = false;
+    async function load() {
+      if (!ignore) {
+        await checkAuth();
+      }
+    }
+    load();
+    return () => {
+      ignore = true;
+    };
   }, [checkAuth]);
 
   useEffect(() => {
     if (!user) return;
-    fetchTimerState();
-    fetchTeamMembers();
+    let ignore = false;
+    async function loadState() {
+      if (!ignore) {
+        await Promise.all([fetchTimerState(), fetchTeamMembers()]);
+      }
+    }
+    loadState();
 
     const interval = setInterval(() => {
       fetchTeamMembers();
@@ -255,27 +286,11 @@ export default function AppSPA() {
     window.addEventListener("focus", onFocus);
 
     return () => {
+      ignore = true;
       clearInterval(interval);
       window.removeEventListener("focus", onFocus);
     };
   }, [user, fetchTimerState, fetchTeamMembers]);
-
-  // Main clock counter ticker (every second)
-  useEffect(() => {
-    if (activeEntry) {
-      setElapsedMs(Date.now() - activeEntry.startTime);
-      timerRef.current = setInterval(() => {
-        setElapsedMs(Date.now() - activeEntry.startTime);
-      }, 1000);
-    } else {
-      setElapsedMs(0);
-      if (timerRef.current) clearInterval(timerRef.current);
-    }
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [activeEntry]);
 
   // Synchronize browser tab title with running timer
   useEffect(() => {
@@ -308,8 +323,8 @@ export default function AppSPA() {
 
       setUser(data.user);
       navigateToTab("timer");
-    } catch (err: any) {
-      setLoginError(err.message || "Failed to sign in");
+    } catch (err: unknown) {
+      setLoginError(err instanceof Error ? err.message : "Failed to sign in");
     } finally {
       setIsLoggingIn(false);
     }
@@ -322,7 +337,6 @@ export default function AppSPA() {
     } finally {
       setUser(null);
       setActiveEntry(null);
-      setElapsedMs(0);
       navigateToTab("timer");
     }
   };
@@ -369,7 +383,6 @@ export default function AppSPA() {
 
       if (res.ok) {
         setActiveEntry(null);
-        setElapsedMs(0);
         fetchTimerState();
         fetchTeamMembers();
       }
@@ -392,12 +405,15 @@ export default function AppSPA() {
   if (!user) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-[#fbf9f5]">
-        <div className="w-full max-w-[340px]">
+        <div className="w-full max-w-85">
           <div className="flex items-center gap-1.5 mb-2">
-            <img
+            <Image
               src="/axcerus-logo.png"
               alt="Axcerus logo"
-              className="h-[28px] w-auto object-contain shrink-0"
+              width={28}
+              height={28}
+              unoptimized
+              className="h-7 w-auto object-contain shrink-0"
             />
             <h1 className="text-[24px] font-bold tracking-[-0.03em] text-[#26201b] leading-none">
               Track
@@ -424,7 +440,7 @@ export default function AppSPA() {
                 autoFocus
                 value={loginEmail}
                 onChange={(e) => setLoginEmail(e.target.value)}
-                className="w-full h-[46px] px-3.5 bg-[#fbf9f5] border-[1.5px] border-[#e5e0d8] rounded-xl text-[14px] text-[#26201b] focus:outline-none focus:border-[#26201b] transition-colors"
+                className="w-full h-11.5 px-3.5 bg-[#fbf9f5] border-[1.5px] border-[#e5e0d8] rounded-xl text-[14px] text-[#26201b] focus:outline-none focus:border-[#26201b] transition-colors"
               />
             </div>
 
@@ -437,14 +453,14 @@ export default function AppSPA() {
                 required
                 value={loginPassword}
                 onChange={(e) => setLoginPassword(e.target.value)}
-                className="w-full h-[46px] px-3.5 bg-[#fbf9f5] border-[1.5px] border-[#e5e0d8] rounded-xl text-[14px] text-[#26201b] focus:outline-none focus:border-[#26201b] transition-colors"
+                className="w-full h-11.5 px-3.5 bg-[#fbf9f5] border-[1.5px] border-[#e5e0d8] rounded-xl text-[14px] text-[#26201b] focus:outline-none focus:border-[#26201b] transition-colors"
               />
             </div>
 
             <button
               type="submit"
               disabled={isLoggingIn}
-              className="w-full h-[46px] mt-2 bg-[#26201b] hover:bg-[#3d352e] text-white text-[14px] font-semibold rounded-xl transition duration-150 cursor-pointer disabled:opacity-50"
+              className="w-full h-11.5 mt-2 bg-[#26201b] hover:bg-[#3d352e] text-white text-[14px] font-semibold rounded-xl transition duration-150 cursor-pointer disabled:opacity-50"
             >
               {isLoggingIn ? "Signing in..." : "Sign in"}
             </button>
@@ -472,8 +488,8 @@ export default function AppSPA() {
         isWorking={isWorking}
       />
 
-      {/* Main Content Container - Responsive max-w-[640px] */}
-      <main className="flex-1 max-w-[640px] w-full mx-auto px-3.5 sm:px-6 pt-4 sm:pt-6 pb-24 sm:pb-16 flex flex-col">
+      {/* Main Content Container - Responsive max-w-160 (640px) */}
+      <main className="flex-1 max-w-160 w-full mx-auto px-3.5 sm:px-6 pt-4 sm:pt-6 pb-24 sm:pb-16 flex flex-col">
         <div
           key={activeTab === "profile" ? `profile-${effectiveProfileMemberId}` : activeTab}
           className="page-transition w-full flex-1 flex flex-col"
@@ -483,7 +499,7 @@ export default function AppSPA() {
             <div className="w-full flex flex-col items-center">
             {/* Main Central Timer Card */}
             <div
-              className={`w-full rounded-[24px] sm:rounded-[28px] px-4 py-7 sm:px-8 sm:pt-10 sm:pb-9 transition-all duration-200 flex flex-col items-center text-center ${
+              className={`w-full rounded-3xl sm:rounded-[28px] px-4 py-7 sm:px-8 sm:pt-10 sm:pb-9 transition-all duration-200 flex flex-col items-center text-center ${
                 isWorking
                   ? "bg-[#e8f2eb] border-[1.5px] border-[#6ab382]"
                   : "bg-[#fbf9f5] border-[1.5px] border-[#e5e0d8]"
@@ -510,29 +526,29 @@ export default function AppSPA() {
               </div>
 
               {isWorking ? (
-                <div className="mb-6 max-w-[380px]">
-                  <p className="text-[14.5px] text-[#595147] font-medium break-words">
+                <div className="mb-6 max-w-95">
+                  <p className="text-[14.5px] text-[#595147] font-medium wrap-break-word">
                     {activeEntry?.description || "Work session in progress"}
                   </p>
                 </div>
               ) : (
-                <form onSubmit={handleStartWorking} className="w-full max-w-[360px] mb-3.5">
+                <form onSubmit={handleStartWorking} className="w-full max-w-90 mb-3.5">
                   <input
                     type="text"
                     placeholder="What are you working on? (optional)"
                     value={descriptionInput}
                     onChange={(e) => setDescriptionInput(e.target.value)}
-                    className="w-full h-[42px] px-4 bg-transparent border-[1.5px] border-[#e5e0d8] rounded-xl text-[14px] text-[#26201b] text-center focus:outline-none focus:border-[#26201b] transition-colors"
+                    className="w-full h-10.5 px-4 bg-transparent border-[1.5px] border-[#e5e0d8] rounded-xl text-[14px] text-[#26201b] text-center focus:outline-none focus:border-[#26201b] transition-colors"
                   />
                 </form>
               )}
 
-              <div className="w-full max-w-[360px] flex justify-center">
+              <div className="w-full max-w-90 flex justify-center">
                 {isWorking ? (
                   <button
                     onClick={handleStopWorking}
                     disabled={isSubmitting}
-                    className="h-[44px] px-8 bg-[#c03636] hover:bg-[#a82b2b] text-white text-[14px] font-semibold rounded-xl transition duration-150 cursor-pointer disabled:opacity-50"
+                    className="h-11 px-8 bg-[#c03636] hover:bg-[#a82b2b] text-white text-[14px] font-semibold rounded-xl transition duration-150 cursor-pointer disabled:opacity-50"
                   >
                     {isSubmitting ? "Stopping..." : "Stop working"}
                   </button>
@@ -540,7 +556,7 @@ export default function AppSPA() {
                   <button
                     onClick={() => handleStartWorking()}
                     disabled={isSubmitting}
-                    className="w-full h-[44px] bg-[#26201b] hover:bg-[#3d352e] text-white text-[14px] font-semibold rounded-xl transition duration-150 cursor-pointer disabled:opacity-50"
+                    className="w-full h-11 bg-[#26201b] hover:bg-[#3d352e] text-white text-[14px] font-semibold rounded-xl transition duration-150 cursor-pointer disabled:opacity-50"
                   >
                     {isSubmitting ? "Starting..." : "Start working"}
                   </button>

@@ -44,7 +44,7 @@ export default function TeamBarChart({
   const maxMs = Math.max(...members.map((m) => m.totalDurationMs), 1);
 
   return (
-    <div className="w-full bg-[#fbf9f5] border-[1.5px] border-[#e5e0d8] rounded-[20px] sm:rounded-[24px] p-4 sm:p-7">
+    <div className="w-full bg-[#fbf9f5] border-[1.5px] border-[#e5e0d8] rounded-[20px] sm:rounded-3xl p-4 sm:p-7">
       {/* Chart Header */}
       <div className="flex items-center justify-between mb-4 sm:mb-6">
         <div>
@@ -110,7 +110,7 @@ export default function TeamBarChart({
                 </div>
 
                 {/* The Bar Column */}
-                <div className="w-full max-w-[56px] h-full flex items-end">
+                <div className="w-full max-w-14 h-full flex items-end">
                   <div
                     style={{ height: `${barHeight}%` }}
                     className={`w-full rounded-t-xl transition-all duration-500 ease-out relative ${
@@ -138,7 +138,7 @@ export default function TeamBarChart({
                       <span className="online-dot absolute -bottom-0.5 -right-0.5 w-2 h-2" />
                     )}
                   </div>
-                  <span className="text-[11px] sm:text-[12px] font-medium text-[#26201b] truncate max-w-[52px] sm:max-w-[65px] group-hover:underline">
+                  <span className="text-[11px] sm:text-[12px] font-medium text-[#26201b] truncate max-w-13 sm:max-w-16.25 group-hover:underline">
                     {member.name}
                   </span>
                 </div>
