@@ -17,6 +17,12 @@
 			"database_id": "d42ad87f-99b1-4e0b-b3ab-27ee0654143a"
 		}
 	],
+	"r2_buckets": [
+		{
+			"binding": "AVATARS_BUCKET",
+			"bucket_name": "tracktime-avatars"
+		}
+	],
 	"observability": {
 		"logs": {
 			"enabled": true,

@@ -34,6 +34,7 @@ export async function getDb(): Promise<any> {
         name text NOT NULL,
         email text NOT NULL UNIQUE,
         password_hash text NOT NULL,
+        avatar_url text,
         created_at integer NOT NULL
       );
       CREATE TABLE IF NOT EXISTS time_entries (
@@ -46,6 +47,12 @@ export async function getDb(): Promise<any> {
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
       );
     `);
+
+    try {
+      sqlite.exec("ALTER TABLE users ADD COLUMN avatar_url text;");
+    } catch {
+      // Column already exists or already migrated
+    }
 
     const { drizzle: drizzleSqlite } = await import("drizzle-orm/better-sqlite3");
     localDbInstance = drizzleSqlite(sqlite, { schema });
