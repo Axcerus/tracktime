@@ -23,11 +23,12 @@ export async function GET(req: NextRequest) {
     const startOfDayMs = clientLocal.getTime() + tzOffsetMinutes * 60 * 1000;
 
     // 1. Fetch all team members
-    const allUsers: Array<{ id: string; name: string; email: string }> = await db
+    const allUsers: Array<{ id: string; name: string; email: string; avatarUrl: string | null }> = await db
       .select({
         id: users.id,
         name: users.name,
         email: users.email,
+        avatarUrl: users.avatarUrl,
       })
       .from(users);
 
@@ -82,6 +83,7 @@ export async function GET(req: NextRequest) {
         id: u.id,
         name: u.name,
         email: u.email,
+        avatarUrl: u.avatarUrl,
         isWorkingNow,
         startTime: stats.activeEntry?.startTime || null,
         description: stats.activeEntry?.description || null,

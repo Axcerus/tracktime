@@ -89,11 +89,12 @@ export async function GET(req: NextRequest) {
     const db = await getDb();
 
     // 1. Fetch all team members
-    const allUsers: Array<{ id: string; name: string; email: string }> = await db
+    const allUsers: Array<{ id: string; name: string; email: string; avatarUrl: string | null }> = await db
       .select({
         id: users.id,
         name: users.name,
         email: users.email,
+        avatarUrl: users.avatarUrl,
       })
       .from(users);
 
@@ -161,6 +162,7 @@ export async function GET(req: NextRequest) {
         id: u.id,
         name: u.name,
         email: u.email,
+        avatarUrl: u.avatarUrl,
         totalDurationMs: stats.totalDurationMs,
         sessionCount: stats.sessionCount,
         isWorkingNow: activeUserSet.has(u.id),
