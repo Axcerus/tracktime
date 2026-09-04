@@ -82,6 +82,7 @@ export interface SessionData {
   userId: string;
   name: string;
   email: string;
+  avatarUrl?: string | null;
   exp: number;
 }
 

@@ -51,6 +51,7 @@ export async function POST(req: NextRequest) {
       userId: user.id,
       name: user.name,
       email: user.email,
+      avatarUrl: user.avatarUrl,
     });
 
     const response = NextResponse.json({
@@ -58,6 +59,7 @@ export async function POST(req: NextRequest) {
         id: user.id,
         name: user.name,
         email: user.email,
+        avatarUrl: user.avatarUrl,
       },
     });
 

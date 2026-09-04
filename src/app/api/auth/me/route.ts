@@ -12,6 +12,7 @@ export async function GET() {
       id: user.userId,
       name: user.name,
       email: user.email,
+      avatarUrl: user.avatarUrl,
     },
   });
 }
