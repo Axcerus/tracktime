@@ -13,8 +13,7 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "tracktimer-db",
-      "database_id": "tracktimer-db-id"
+      "database_name": "tracktime-db"
     }
   ],
   "observability": {
